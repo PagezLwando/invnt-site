@@ -8,15 +8,15 @@
     $query = "SELECT * FROM invnt_tbl";
     $result = mysqli_query($db, $query);
 
-    $file_ending = "xls";
+    $file_ending = "csv";
     //header info for browser
-    header("Content-Type: application/xls");    
-    header("Content-Disposition: attachment; filename=$filename.xls");  
+    header("Content-Type: application/$file_ending");    
+    header("Content-Disposition: attachment; filename=$filename.$file_ending");  
     header("Pragma: no-cache"); 
     header("Expires: 0");
-    /*******Start of Formatting for Excel*******/   
+    /**Start of Formatting for Excel**/   
     //define separator (defines columns in excel & tabs in word)
-    $sep = "\t"; //tabbed character
+    $sep = ","; //tabbed character
     //start of printing column names as names of MySQL fields
     for ($i = 0; $i < mysql_num_fields($result); $i++) {
     echo mysql_field_name($result,$i) . "\t";
@@ -43,4 +43,4 @@
         print "\n";
     }
 }
-?>
+?

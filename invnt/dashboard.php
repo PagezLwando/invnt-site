@@ -3,7 +3,65 @@
   if (!isset($_SESSION['email']))
   {
     $_SESSION['message'] = "You are not logged in...!";
-    header('location: index.php');
+    header('location: login.php');
+  }else
+  {
+      include ('connect.php');
+      $role = $_SESSION["role"];
+      $email = $_SESSION["email"];
+      $query = "SELECT * FROM users WHERE role = :role AND email = :email";
+      $statement = $connect->prepare($query);
+      $statement->execute(array(':role' => $role, ':email' => $email));
+      $count = $statement->rowCount();
+      if ($count == 1)
+      {
+        $results = $statement->fetchAll();
+        foreach ($results as $row)
+        {
+          if (isset($_SESSION["role"]))
+          {
+            //if user is admin direct to dashboard else to welcome page
+            switch ($_SESSION["role"])
+            {
+              case 'admin':
+              # code...
+              $_SESSION['id'] = $row['id'];
+              $_SESSION['role'] = $row['role'];
+              $_SESSION['email'] = $row['email'];
+              $_SESSION['name'] = $row['name'];
+              $_SESSION['surname'] = $row['surname'];
+
+              //header("location: dashboard.php");
+              break;
+
+              case 'agent':
+              # code...
+              $_SESSION['id'] = $row['id'];
+              $_SESSION['role'] = $row['role'];
+              $_SESSION['email'] = $row['email'];
+              $_SESSION['name'] = $row['name'];
+              $_SESSION['surname'] = $row['surname'];
+              $_SESSION['message'] = "Unauthorised User...!";
+
+              header("location: welcome.php");
+              break;
+             
+              default:
+              # code...
+              $message = '<label>No Role... Please select role</label>';
+              break;
+            }
+          }
+          else
+          {
+            $message = '<label>You do not have permission to this link..!</label>';
+          }
+        }
+      }
+      else
+      {
+        $message = '<label>Something went wrong. Try later..</label>';
+      }
   }
 ?>
 <!DOCTYPE html>
@@ -31,45 +89,58 @@
     <h1>INVNT-CPT</h1>
     <!-- logged in user information -->
     <?php  if (isset($_SESSION['email'])) : ?>
-      Welcome <strong><?php echo $_SESSION['email'];?></strong>
+      Welcome <strong><?php echo $_SESSION["name"]; echo " "; echo $_SESSION['surname'];?></strong>
     <?php endif ?>
   </div>
 
   <!-- Container (About Section) -->
   <div id="about" class="container">
     <nav class="navbar navbar-expand-lg navbar-light bg-light" style="font-size: 12px;">
-    <div class="collapse navbar-collapse">
-      <a class="navbar-brand active" href="dashboard.php">INVNT-CPT</a>
-      <ul class="navbar-nav nav-tabs mr-auto mt-2 mt-lg-0">
-        <li class="nav-item">
-          <a class="nav-link" href="view_all.php">ALL CLIENTS</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="view_agents.php">ALL AGENTS</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="register.php">REGISTER USERS</a>
-        </li><li class="nav-item">
-          <a class="nav-link" href="welcome.php">EDIT USERS</a>
-        </li>
-      </ul>
-      <form action="" class="form-inline my-2 my-lg-0">
-        <input class="form-control mr-sm-2" type="search" name="search" placeholder="Search users..." aria-label="Search">
-        
-          <a href="dashboard.php?search=<?php echo $row['id']; ?>"><button type="submit" class="btn my-2 my-sm-0">Search</button></a>
-      </form>
-      <a href="logout.php?logout='1'"><button class="btn btn-outline-danger btn-sm">Logout</button></a>
+      <div class="collapse navbar-collapse">
+        <a class="navbar-brand active" href="dashboard.php">INVNT-CPT</a>
+        <ul class="navbar-nav nav-tabs mr-auto mt-2 mt-lg-0">
+          <li class="nav-item">
+            <a class="nav-link" href="view_all.php">VIEW LEADS</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="view_agents.php">VIEW AGENTS</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="register.php">REGISTER AGENT</a>
+          </li><li class="nav-item">
+            <a class="nav-link" href="welcome.php">EDIT AGENTS</a>
+          </li>
+        </ul>
+        <form action="" class="form-inline my-2 my-lg-0">
+          <input class="form-control mr-sm-2" type="search" name="search" placeholder="Search users..." aria-label="Search">
+          
+            <a href="dashboard.php?search=<?php echo $row['id']; ?>"><button type="submit" class="btn my-2 my-sm-0">Search</button></a>
+        </form>
+        <a href="logout.php?logout='1'"><button class="btn btn-outline-danger btn-sm">Logout</button></a>
+      </div>
+    </nav>
+    <div class="row">
+      <div class="col-md-6">
+        <p>User: <?php echo $_SESSION['email'];?></p>
+        <p>Role: <?php echo $_SESSION['role'];?></p>
+      </div>
+      <div class="col-md-6">
+        <div class="erro" style="font-size: 14px; color: red;">
+          <!-- Display validation errors here -->
+          <?php include ('errors.php'); ?>
+          <br>
+        </div>
+        <?php if (isset($_SESSION['message'])): ?>
+          <div class="msg">
+            <?php
+              echo $_SESSION['message'];
+              unset($_SESSION['message']);
+            ?>
+          </div>
+        <?php endif ?>
+      </div>
     </div>
-  </nav>
-  <hr>
-  <?php if (isset($_SESSION['message'])): ?>
-    <div class="msg">
-      <?php 
-        echo $_SESSION['com_message_pump()']; 
-        unset($_SESSION['message']);
-      ?>
-    </div>
-  <?php endif ?>
+    <hr>
     <?php
     $query = "SELECT * FROM users";
     $results = mysqli_query($db, $query);
